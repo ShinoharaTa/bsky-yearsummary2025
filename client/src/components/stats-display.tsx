@@ -1,23 +1,65 @@
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
-import { fetchYearlyStats, type BlueskyStats } from "@/lib/bluesky";
+import { useLocation } from "wouter";
+import {
+  fetchYearlyStats,
+  fetchSavedSummary,
+  type BlueskyStats,
+  agent,
+} from "@/lib/bluesky";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { MessageSquare, Heart, MessageCircle, Calendar, Share2, Copy, Check, Download, Loader2 } from "lucide-react";
+import {
+  MessageSquare,
+  Heart,
+  MessageCircle,
+  Calendar,
+  Share2,
+  Copy,
+  Check,
+  Download,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { toPng } from "html-to-image";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface StatsDisplayProps {
   did: string;
   handle?: string;
 }
 
+function buildSummaryText(stats: BlueskyStats): string {
+  const mostActiveMonthName = stats.mostActiveMonth ?? null;
+
+  return (
+    `2025年のBluesky活動まとめ（bsky-summary2025.shino3.net）\n\n` +
+    `📝 投稿: ${stats.posts.toLocaleString()} 件\n` +
+    `💬 リプライ数: ${stats.replies.toLocaleString()} 件\n` +
+    `❤️ いいね数: ${stats.likes.toLocaleString()} 件` +
+    (mostActiveMonthName ? `\n📅 もっとも活発だった月: ${mostActiveMonthName}` : "")
+  );
+}
+
 export function StatsDisplay({ did, handle }: StatsDisplayProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedOnce, setSavedOnce] = useState(false);
+   const [autoSaved, setAutoSaved] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const [location, setLocation] = useLocation();
+  const [redirected, setRedirected] = useState(false);
 
   const [stats, setStats] = useState<BlueskyStats>({
     posts: 0,
@@ -29,25 +71,46 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
 
   useEffect(() => {
     let mounted = true;
-    
+
+    // /:handle でアクセスしている場合は、常にレキシコンの
+    // Year Summary レコードのみを読む軽量モードにする。
+    // （重い listRecords ベースの解析は / のときだけ行う）
+    const shouldUseSavedSummary = !!handle;
+
     const loadStats = async () => {
       try {
-        const data = await fetchYearlyStats(did, 2025, (p) => {
+        if (shouldUseSavedSummary && handle) {
+          // 保存済みサマリーのみを取得するモード（他人の /:handle 表示時など）
+          const data = await fetchSavedSummary(handle);
           if (mounted) {
-            setStats(prev => ({ ...prev, progress: Math.min(prev.progress + p, 90) }));
+            setStats({
+              ...data,
+              loading: false,
+              progress: 100,
+            });
           }
-        });
-        
-        if (mounted) {
-          setStats({
-            ...data,
-            loading: false,
-            progress: 100,
+        } else {
+          // 自分自身のアカウントに対する重い解析（listRecords）モード
+          const data = await fetchYearlyStats(did, 2025, (p) => {
+            if (mounted) {
+              setStats((prev) => ({
+                ...prev,
+                progress: Math.min(prev.progress + p, 90),
+              }));
+            }
           });
+
+          if (mounted) {
+            setStats({
+              ...data,
+              loading: false,
+              progress: 100,
+            });
+          }
         }
       } catch (err) {
         if (mounted) {
-          setStats(prev => ({
+          setStats((prev) => ({
             ...prev,
             loading: false,
             error: "Failed to fetch stats. Your timeline might be too massive!",
@@ -57,8 +120,71 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
     };
 
     loadStats();
-    return () => { mounted = false; };
-  }, [did]);
+    return () => {
+      mounted = false;
+    };
+  }, [did, handle]);
+
+  // 自分自身のアカウントを / で解析し終わったタイミングで、
+  // Year Summary を自動的に PDS に保存する。
+  useEffect(() => {
+    if (autoSaved) return;
+    if (stats.loading || stats.error) return;
+    // /:handle のときは、このマウントでは自動保存しない（/ で一度だけ保存）
+    if (handle) return;
+    if (!agent.session || agent.session.did !== did) return;
+
+    const saveToPds = async () => {
+      try {
+        const generatedAt = new Date().toISOString();
+        const summaryText = buildSummaryText(stats);
+
+        await agent.api.com.atproto.repo.putRecord({
+          repo: agent.session!.did,
+          collection: "net.shino3.yearsummary2025.wrap",
+          rkey: "2025",
+          record: {
+            year: 2025,
+            generatedAt,
+            posts: stats.posts,
+            replies: stats.replies,
+            likes: stats.likes,
+            mostActiveMonth: stats.mostActiveMonth ?? null,
+            firstPostDate: null,
+            summaryText,
+            lang: "ja",
+            version: "1.0.0",
+          },
+        });
+
+        setAutoSaved(true);
+
+        // 自動保存後に、シェアを促すモーダルを一度表示する
+        setShareDialogOpen(true);
+      } catch (err) {
+        console.error("Failed to auto-save year summary", err);
+      }
+    };
+
+    void saveToPds();
+  }, [autoSaved, stats, did]);
+
+  // 解析完了時に、自分のアカウントであれば /:handle へ遷移して
+  // その URL をそのままシェアに使えるようにする。
+  useEffect(() => {
+    if (redirected) return;
+    if (stats.loading || stats.error) return;
+
+    const isSelf = !!(agent.session && agent.session.did === did);
+    const isRootPath = location === "/";
+
+    // / （ハンドル無し）で自分自身を見ているときにのみ、
+    // 解析完了後に /:handle へ遷移する。
+    if (isSelf && isRootPath && !handle && agent.session?.handle) {
+      setRedirected(true);
+      setLocation(`/${agent.session.handle}`);
+    }
+  }, [stats.loading, stats.error, handle, did, location, redirected, setLocation]);
 
   const shareUrl = `${window.location.origin}/${handle || did}`;
   const shareText = `私の2025年のBluesky活動まとめ:
@@ -69,8 +195,15 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
 あなたの活動もチェック: ${shareUrl}`;
 
   const handleShare = () => {
-    const intentUrl = `https://bsky.app/intent/compose?text=${encodeURIComponent(shareText)}`;
-    window.open(intentUrl, '_blank');
+    setShareDialogOpen(true);
+  };
+
+  const handleConfirmShare = () => {
+    const intentUrl = `https://bsky.app/intent/compose?text=${encodeURIComponent(
+      shareText,
+    )}`;
+    window.open(intentUrl, "_blank");
+    setShareDialogOpen(false);
   };
 
   const handleCopy = () => {
@@ -120,6 +253,51 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
     }
   };
 
+  const canSave = !!(agent.session && agent.session.did === did);
+
+  const handleSaveAndPost = async () => {
+    if (!canSave) {
+      toast({
+        title: "保存できません",
+        description: "ご自身のアカウントでログインしているときのみ保存できます。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const generatedAt = new Date().toISOString();
+      const displayName = handle || agent.session?.handle || "あなた";
+      const summaryText = buildSummaryText(stats);
+
+      // Bluesky にも自動投稿
+      const postText =
+        `${displayName} の 2025 年の Bluesky 活動まとめ\n\n` +
+        summaryText +
+        `\n\n詳しくはこちら: ${shareUrl}`;
+
+      await agent.post({
+        text: postText,
+      });
+
+      setSavedOnce(true);
+      toast({
+        title: "保存＆投稿しました",
+        description: "PDS にサマリーを保存し、Bluesky に投稿しました。",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "保存／投稿に失敗しました",
+        description: "時間をおいてもう一度お試しください。",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (stats.loading) {
     return (
       <div className="max-w-md mx-auto text-center space-y-6 pt-12">
@@ -141,6 +319,56 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
   }
 
   if (stats.error) {
+    // 共有用リンクなどから /[identifier] で直接アクセスされた場合、
+    // PDS からデータが取得できなければ、その人への「リクエスト画面」を表示する
+    if (handle) {
+      const atHandle = handle.startsWith("@") ? handle : `@${handle}`;
+
+      const handleRequest = () => {
+        const appRoot = window.location.origin;
+        const requestText = `${atHandle} さんの 2025 年の Bluesky 活動まとめを見たいです！\n\nここから生成できます：${appRoot}`;
+        const intentUrl = `https://bsky.app/intent/compose?text=${encodeURIComponent(
+          requestText,
+        )}`;
+        window.open(intentUrl, "_blank");
+      };
+
+      const goHome = () => {
+        window.location.href = "/";
+      };
+
+      return (
+        <div className="max-w-md mx-auto space-y-6 pt-12 text-center">
+          <div className="glass-card p-8 rounded-xl border border-white/10 bg-black/40 text-white space-y-4">
+            <h2 className="text-xl font-display font-bold">
+              {atHandle} さんの解析結果はまだありません
+            </h2>
+            <p className="text-sm text-blue-200/70 leading-relaxed">
+              PDS から 2025 年の活動データを取得できませんでした。
+              <br />
+              アカウントの持ち主に、解析のリクエストを送りましょう。
+            </p>
+            <div className="flex flex-col gap-3 mt-4">
+              <Button
+                onClick={handleRequest}
+                className="w-full h-11 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium"
+              >
+                Bluesky で解析リクエストを送る
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={goHome}
+                className="w-full h-11 text-blue-200 hover:text-white hover:bg-white/5 rounded-full text-sm"
+              >
+                トップページに戻る
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 自分自身の画面など、handle が無い場合は従来どおりのエラーメッセージ
     return (
       <div className="text-center text-red-400 glass-card p-8 rounded-xl">
         <p>データの取得に失敗しました。タイムラインが大きすぎる可能性があります。</p>
@@ -288,8 +516,85 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
               )}
             </Button>
           </div>
+
+          {canSave && (
+            <div className="mt-2">
+              <Button
+                onClick={handleSaveAndPost}
+                disabled={saving || savedOnce}
+                className="w-full h-11 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full text-sm"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    保存＆投稿中...
+                  </>
+                ) : savedOnce ? (
+                  "保存＆投稿済み"
+                ) : (
+                  "結果を保存してBlueskyに投稿"
+                )}
+              </Button>
+              <p className="mt-1 text-[11px] text-blue-200/60 text-left">
+                bsky-summary2025.shino3.net が、あなたの PDS に
+                <span className="font-mono"> net.shino3.yearsummary2025.wrap/2025 </span>
+                として保存し、同じ内容を Bluesky に投稿します。
+              </p>
+            </div>
+          )}
+
+          {/* CTA: この結果を見た人自身にも一年のまとめを作ってもらう導線 */}
+          <div className="mt-4 p-4 rounded-2xl border border-white/10 bg-white/5 text-left space-y-2">
+            <p className="text-sm text-blue-50 font-medium">
+              あなたも自分の一年のまとめを作りませんか？
+            </p>
+            <p className="text-xs text-blue-100/70">
+              トップページからログインすると、あなたのBlueskyでの2025年の活動を自動で集計してまとめを作成できます。
+            </p>
+            <Button
+              onClick={() => (window.location.href = "/")}
+              variant="secondary"
+              className="mt-2 w-full h-10 bg-white text-slate-900 hover:bg-slate-100 text-xs sm:text-sm font-medium rounded-full"
+            >
+              一年のまとめを作ろう
+            </Button>
+          </div>
         </div>
       </motion.div>
+
+      {/* Blueskyシェア用モーダル */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="bg-slate-950 text-white border-white/10">
+          <DialogHeader>
+            <DialogTitle>Blueskyで2025年の活動をシェアしませんか？</DialogTitle>
+            <DialogDescription className="text-blue-100/70">
+              投稿内容は開いたあとで自由に編集できます。気軽にシェアしてみましょう。
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4 p-3 rounded-lg bg-slate-900/80 border border-white/10 max-h-52 overflow-y-auto">
+            <p className="text-xs whitespace-pre-wrap text-blue-50">{shareText}</p>
+          </div>
+
+          <DialogFooter className="mt-4 space-y-2 sm:space-y-0">
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full sm:w-auto text-blue-200 hover:text-white hover:bg-white/5"
+              onClick={() => setShareDialogOpen(false)}
+            >
+              あとで
+            </Button>
+            <Button
+              type="button"
+              className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white"
+              onClick={handleConfirmShare}
+            >
+              Blueskyを開いて投稿する
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

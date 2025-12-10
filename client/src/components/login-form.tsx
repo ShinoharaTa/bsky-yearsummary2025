@@ -129,6 +129,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 "2025年の活動を見る"
               )}
             </Button>
+            <p className="mt-3 text-[11px] leading-relaxed text-blue-200/50 text-left">
+              解析結果の画面からボタンを押すと、あなたの PDS に
+              <span className="font-mono"> net.shino3.yearsummary2025.wrap/2025 </span>
+              として今年一年のサマリーを保存し、結果を Bluesky に 1 件投稿できます。
+              投稿内容には <span className="font-mono">bsky-summary2025.shino3.net</span> へのリンクが含まれます。
+            </p>
           </form>
         </Form>
       </CardContent>

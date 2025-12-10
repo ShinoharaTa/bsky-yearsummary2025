@@ -16,11 +16,10 @@ export const agent = new BskyAgent({
 });
 
 export async function fetchYearlyStats(
-  handleOrDid: string, 
-  year: number, 
-  onProgress: (progress: number) => void
+  handleOrDid: string,
+  year: number,
+  onProgress: (progress: number) => void,
 ): Promise<Omit<BlueskyStats, "loading" | "progress" | "error">> {
-  
   // Resolve handle to DID if needed
   let did = handleOrDid;
   if (!did.startsWith("did:")) {
@@ -34,15 +33,18 @@ export async function fetchYearlyStats(
   let posts = 0;
   let replies = 0;
   let likes = 0;
-  
+
   // We'll track month counts to find most active month
   const monthCounts: Record<number, number> = {};
 
-  // Helper to fetch all records of a collection
-  const fetchCollection = async (collection: string, processRecord: (record: any) => void) => {
+  // Helper to fetch all records of a collection (kept for future use)
+  const fetchCollection = async (
+    collection: string,
+    processRecord: (record: any) => void,
+  ) => {
     let cursor: string | undefined;
     let keepGoing = true;
-    
+
     while (keepGoing) {
       const res = await agent.api.com.atproto.repo.listRecords({
         repo: did,
@@ -58,18 +60,13 @@ export async function fetchYearlyStats(
         if (createdAt >= startOfYear && createdAt < endOfYear) {
           processRecord(record);
         } else if (createdAt < startOfYear) {
-          // Assuming records are roughly ordered (they aren't always guaranteed by listRecords, but often are)
-          // Actually, listRecords is by RKEY. RKEYs are often time-based (TID), so we can stop if we go too far back?
-          // No, RKEYs are not strictly guaranteed to be time-ordered in all implementations, but for Bluesky they usually are (TID).
-          // We'll assume we need to scan everything to be safe or until we hit a clear boundary if we trust TIDs.
-          // For safety in this prototype, we'll scan until we see enough old records or finish.
-          // Optimization: If we see 50 records in a row older than startOfYear, we abort.
+          // see original comments; we currently keep scanning
         }
       }
-      
+
       cursor = res.data.cursor;
       if (!cursor) keepGoing = false;
-      
+
       // Fake progress for UI feedback
       onProgress(Math.random() * 10); // Incrementally add progress
     }
@@ -79,11 +76,7 @@ export async function fetchYearlyStats(
   let consecutiveOldPosts = 0;
   let cursor: string | undefined;
   let hasMore = true;
-  
-  // Optimization: Fetching posts/replies
-  // We can't easily parallelize listRecords for a single collection without known cursors.
-  // We will do it sequentially.
-  
+
   while (hasMore) {
     const res = await agent.api.com.atproto.repo.listRecords({
       repo: did,
@@ -100,7 +93,7 @@ export async function fetchYearlyStats(
       const time = date.getTime();
 
       if (time > endOfYear) continue;
-      
+
       if (time < startOfYear) {
         consecutiveOldPosts++;
         if (consecutiveOldPosts > 50) {
@@ -111,17 +104,17 @@ export async function fetchYearlyStats(
       }
       consecutiveOldPosts = 0;
 
-      // It's in 2025
+      // It's in target year
       if (record.reply) {
         replies++;
       } else {
         posts++;
       }
-      
+
       const month = date.getMonth();
       monthCounts[month] = (monthCounts[month] || 0) + 1;
     }
-    
+
     cursor = res.data.cursor;
     if (!cursor) break;
     onProgress(5); // Arbitrary progress tick
@@ -158,7 +151,7 @@ export async function fetchYearlyStats(
       consecutiveOldPosts = 0;
       likes++;
     }
-    
+
     cursor = res.data.cursor;
     if (!cursor) break;
     onProgress(5);
@@ -173,13 +166,56 @@ export async function fetchYearlyStats(
       maxMonth = parseInt(m);
     }
   });
-  
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const mostActiveMonthName = maxCount > 0 ? months[maxMonth] : undefined;
 
   return {
     posts,
     replies,
     likes,
-    mostActiveMonth: maxCount > 0 ? months[maxMonth] : undefined
+    mostActiveMonth: mostActiveMonthName,
+  };
+}
+
+// すでに PDS に保存されている Year Summary レコード
+// （net.shino3.yearsummary2025.wrap/2025）を読み出す軽量 API。
+// /:handle アクセス時はこちらを優先して使う想定。
+export async function fetchSavedSummary(
+  handleOrDid: string,
+): Promise<Omit<BlueskyStats, "loading" | "progress" | "error">> {
+  // Resolve handle to DID if needed
+  let did = handleOrDid;
+  if (!did.startsWith("did:")) {
+    const res = await agent.resolveHandle({ handle: handleOrDid });
+    did = res.data.did;
+  }
+
+  const res = await agent.api.com.atproto.repo.getRecord({
+    repo: did,
+    collection: "net.shino3.yearsummary2025.wrap",
+    rkey: "2025",
+  });
+
+  const record: any = res.data.value;
+
+  return {
+    posts: record.posts ?? 0,
+    replies: record.replies ?? 0,
+    likes: record.likes ?? 0,
+    mostActiveMonth: record.mostActiveMonth ?? undefined,
   };
 }

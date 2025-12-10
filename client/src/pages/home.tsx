@@ -56,7 +56,7 @@ function HomePage() {
       {/* Main Content */}
       <main className="flex-grow w-full relative z-10 max-w-4xl mx-auto flex flex-col justify-center p-4 sm:p-8">
         {showStats && didToFetch ? (
-          <StatsDisplay did={didToFetch} handle={targetHandle || agent.session?.handle} />
+          <StatsDisplay did={didToFetch} handle={targetHandle || undefined} />
         ) : (
           <div className="space-y-8 sm:space-y-12 py-8 sm:py-0">
             <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -69,6 +69,7 @@ function HomePage() {
               </h1>
               <p className="text-base sm:text-lg text-blue-200/60 max-w-lg mx-auto break-keep leading-relaxed px-4">
                 アカウントを連携して、2025年の投稿数やいいね数などの活動データを振り返りましょう。
+                解析結果の画面からワンクリックで、bsky-summary2025.shino3.net によって結果をあなたの PDS に保存し、Bluesky にも自動投稿できます。
               </p>
             </div>
             

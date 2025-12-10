@@ -1,0 +1,76 @@
+{
+  "lexicon": 1,
+  "id": "net.shino3.yearsummary2025.wrap",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": {
+        "type": "literal",
+        "value": "2025"
+      },
+      "record": {
+        "type": "object",
+        "required": [
+          "year",
+          "generatedAt",
+          "posts",
+          "replies",
+          "likes",
+          "summaryText"
+        ],
+        "properties": {
+          "year": {
+            "type": "integer",
+            "description": "集計対象の年。2025 固定を推奨。"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "この集計結果が生成された日時 (ISO 8601)。"
+          },
+          "posts": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "2025 年中に作成した投稿（オリジナル）の件数。"
+          },
+          "replies": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "2025 年中に行った返信の件数。"
+          },
+          "likes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "2025 年中に送ったいいねの件数。"
+          },
+          "mostActiveMonth": {
+            "type": "string",
+            "description": "最もアクティブだった月を表す文字列（例: 'January'）。",
+            "nullable": true
+          },
+          "firstPostDate": {
+            "type": "string",
+            "format": "datetime",
+            "description": "2025 年最初の投稿日時 (あれば)。",
+            "nullable": true
+          },
+          "summaryText": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "2025 年全体のナラティブな総括テキスト（人間向け）。"
+          },
+          "lang": {
+            "type": "string",
+            "description": "summaryText の言語タグ（例: 'ja', 'en'）。",
+            "nullable": true
+          },
+          "version": {
+            "type": "string",
+            "description": "この year summary レコードのスキーマ／生成ロジックのバージョン。",
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}
