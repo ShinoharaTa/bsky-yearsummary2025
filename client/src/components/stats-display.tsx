@@ -53,9 +53,7 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [savedOnce, setSavedOnce] = useState(false);
-   const [autoSaved, setAutoSaved] = useState(false);
+  const [autoSaved, setAutoSaved] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const [location, setLocation] = useLocation();
@@ -193,19 +191,18 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
 ❤️ いいね数: ${stats.likes.toLocaleString()}
 
 あなたも2025年を振り返ってみませんか？
-👉 ${shareUrl}`;
+👉 ${shareUrl}
+
+#SkyWrap25`;
 
   const handleShare = () => {
     setShareDialogOpen(true);
   };
 
-  const handleConfirmShare = () => {
-    const intentUrl = `https://bsky.app/intent/compose?text=${encodeURIComponent(
-      shareText,
-    )}`;
-    window.open(intentUrl, "_blank");
-    setShareDialogOpen(false);
-  };
+  // シェア用のintent URL
+  const shareIntentUrl = `https://bsky.app/intent/compose?text=${encodeURIComponent(
+    shareText,
+  )}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -251,51 +248,6 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
       });
     } finally {
       setDownloading(false);
-    }
-  };
-
-  const canSave = !!(agent.session && agent.session.did === did);
-
-  const handleSaveAndPost = async () => {
-    if (!canSave) {
-      toast({
-        title: "保存できません",
-        description: "自分のアカウントでログインしてください。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const generatedAt = new Date().toISOString();
-      const displayName = handle || agent.session?.handle || "あなた";
-      const summaryText = buildSummaryText(stats);
-
-      // Bluesky にも自動投稿
-      const postText =
-        `${displayName} の 2025 年の Bluesky 活動まとめ\n\n` +
-        summaryText +
-        `\n\n詳しくはこちら: ${shareUrl}`;
-
-      await agent.post({
-        text: postText,
-      });
-
-      setSavedOnce(true);
-      toast({
-        title: "保存・投稿しました！",
-        description: "あなたのPDSへの保存と、Blueskyへの投稿が完了しました。",
-      });
-    } catch (err) {
-      console.error(err);
-      toast({
-        title: "保存／投稿に失敗しました",
-        description: "時間をおいてもう一度お試しください。",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -532,32 +484,6 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
           </Button>
         </div>
 
-        {canSave && (
-          <div className="space-y-2">
-            <Button
-              onClick={handleSaveAndPost}
-              disabled={saving || savedOnce}
-              className="w-full h-11 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full text-sm"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Blueskyに投稿中...
-                </>
-              ) : savedOnce ? (
-                "Blueskyに投稿済み"
-              ) : (
-                "このまとめをBlueskyに投稿"
-              )}
-            </Button>
-            <p className="text-[11px] text-blue-200/60 text-left">
-              bsky-summary2025.shino3.net が、あなたのPDSに
-              <span className="font-mono"> net.shino3.yearsummary2025.wrap/2025 </span>
-              としてまとめを保存し、同じ内容をBlueskyへ投稿します。
-            </p>
-          </div>
-        )}
-
         {/* CTA: この結果を見た人自身にも一年のまとめを作ってもらう導線 */}
         <div className="p-4 rounded-2xl border border-white/10 bg-white/5 text-left space-y-3">
           <div className="space-y-1">
@@ -602,11 +528,12 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
               あとで
             </Button>
             <Button
-              type="button"
+              asChild
               className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white"
-              onClick={handleConfirmShare}
             >
-              Blueskyを開いて投稿する
+              <a href={shareIntentUrl} target="_blank" rel="noopener noreferrer">
+                Blueskyを開いて投稿する
+              </a>
             </Button>
           </DialogFooter>
         </DialogContent>
