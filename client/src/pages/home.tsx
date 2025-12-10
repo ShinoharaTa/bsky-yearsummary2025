@@ -62,14 +62,13 @@ function HomePage() {
             <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-blue-200 text-sm mb-4">
                 <Sparkles className="w-4 h-4 text-yellow-400" />
-                <span>2025年 活動まとめ</span>
+                <span>Blueskyでの1年を、1枚のカードに。</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-br from-white via-blue-100 to-blue-400 tracking-tighter pb-2 text-balance leading-[1.2]">
-                あなたのBlueskyでの1年
+                Bluesky Life in 2025
               </h1>
-              <p className="text-base sm:text-lg text-blue-200/60 max-w-lg mx-auto break-keep leading-relaxed px-4">
-                アカウントを連携して、2025年の投稿数やいいね数などの活動データを振り返りましょう。
-                解析結果の画面からワンクリックで、bsky-summary2025.shino3.net によって結果をあなたの PDS に保存し、Bluesky にも自動投稿できます。
+              <p className="text-base sm:text-lg text-blue-200/70 max-w-lg mx-auto break-keep leading-relaxed px-4">
+                あなたの2025年の投稿・リプライ・いいねを自動で集計し、「1年のまとめカード」として発行します。
               </p>
             </div>
             
@@ -81,8 +80,13 @@ function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative w-full py-6 text-center text-white/20 text-xs z-10 flex-shrink-0">
-        <p>© 2025 Bluesky Wrapper. Not affiliated with Bluesky PBLLC.</p>
+      <footer className="relative w-full py-6 text-center text-white/40 text-xs z-10 flex-shrink-0">
+        <p>
+          © 2025 <span className="font-semibold">SkyWrap</span>.{" "}
+          <span className="text-white/50 text-[11px]">
+            Not affiliated with Bluesky PBLLC.
+          </span>
+        </p>
       </footer>
     </div>
   );

@@ -187,12 +187,13 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
   }, [stats.loading, stats.error, handle, did, location, redirected, setLocation]);
 
   const shareUrl = `${window.location.origin}/${handle || did}`;
-  const shareText = `私の2025年のBluesky活動まとめ:
+  const shareText = `私の2025年のBluesky活動まとめ
 📝 投稿数: ${stats.posts.toLocaleString()}
 💬 リプライ数: ${stats.replies.toLocaleString()}
 ❤️ いいね数: ${stats.likes.toLocaleString()}
 
-あなたの活動もチェック: ${shareUrl}`;
+あなたも2025年を振り返ってみませんか？
+👉 ${shareUrl}`;
 
   const handleShare = () => {
     setShareDialogOpen(true);
@@ -211,7 +212,7 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
     setCopied(true);
     toast({
       title: "リンクをコピーしました",
-      description: "あなたの活動をシェアしましょう！",
+      description: "SNSでシェアしましょう！",
     });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -238,7 +239,7 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
       link.click();
       
       toast({
-        title: "画像を保存しました",
+        title: "画像をダウンロードしました",
         description: "統計カードがダウンロードされました。",
       });
     } catch (err) {
@@ -259,7 +260,7 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
     if (!canSave) {
       toast({
         title: "保存できません",
-        description: "ご自身のアカウントでログインしているときのみ保存できます。",
+        description: "自分のアカウントでログインしてください。",
         variant: "destructive",
       });
       return;
@@ -283,8 +284,8 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
 
       setSavedOnce(true);
       toast({
-        title: "保存＆投稿しました",
-        description: "PDS にサマリーを保存し、Bluesky に投稿しました。",
+        title: "保存・投稿しました！",
+        description: "あなたのPDSへの保存と、Blueskyへの投稿が完了しました。",
       });
     } catch (err) {
       console.error(err);
@@ -301,18 +302,24 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
   if (stats.loading) {
     return (
       <div className="max-w-md mx-auto text-center space-y-6 pt-12">
-        <motion.div 
-          initial={{ opacity: 0 }} 
+        <motion.div
+          initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="space-y-2"
         >
-          <h2 className="text-2xl font-display text-white">データを集計中...</h2>
-          <p className="text-blue-200/60">PDSから2025年の活動データを取得しています。</p>
+          <h2 className="text-2xl font-display text-white">
+            2025年の足あとを集計中…
+          </h2>
+          <p className="text-blue-200/70">
+            PDSから2025年の投稿・リプライ・いいねを読み込んでいます。少しお待ちください。
+          </p>
         </motion.div>
-        
+
         <div className="space-y-2">
           <Progress value={stats.progress} className="h-2 bg-white/10" />
-          <div className="text-xs text-blue-300/40 text-right font-mono">{Math.floor(stats.progress)}%</div>
+          <div className="text-xs text-blue-300/40 text-right font-mono">
+            {Math.floor(stats.progress)}%
+          </div>
         </div>
       </div>
     );
@@ -341,19 +348,19 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
         <div className="max-w-md mx-auto space-y-6 pt-12 text-center">
           <div className="glass-card p-8 rounded-xl border border-white/10 bg-black/40 text-white space-y-4">
             <h2 className="text-xl font-display font-bold">
-              {atHandle} さんの解析結果はまだありません
+              {atHandle} さんのまとめはまだありません
             </h2>
             <p className="text-sm text-blue-200/70 leading-relaxed">
-              PDS から 2025 年の活動データを取得できませんでした。
+              PDSから2025年のまとめレコードが見つかりませんでした。
               <br />
-              アカウントの持ち主に、解析のリクエストを送りましょう。
+              アカウントの持ち主に「今年のまとめを作ってほしい」とお願いしてみましょう。
             </p>
             <div className="flex flex-col gap-3 mt-4">
               <Button
                 onClick={handleRequest}
                 className="w-full h-11 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium"
               >
-                Bluesky で解析リクエストを送る
+                Blueskyでまとめ作成をお願いする
               </Button>
               <Button
                 variant="ghost"
@@ -371,7 +378,9 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
     // 自分自身の画面など、handle が無い場合は従来どおりのエラーメッセージ
     return (
       <div className="text-center text-red-400 glass-card p-8 rounded-xl">
-        <p>データの取得に失敗しました。タイムラインが大きすぎる可能性があります。</p>
+        <p>
+          データの取得に失敗しました。タイムラインが大きいか、一時的なエラーの可能性があります。時間をおいて再度お試しください。
+        </p>
       </div>
     );
   }
@@ -404,31 +413,36 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-blue-500/20 rounded-full blur-[80px]" />
         <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-purple-500/20 rounded-full blur-[80px]" />
 
-        <motion.div variants={item} className="text-center space-y-2 mb-8 relative z-10">
+        <motion.div
+          variants={item}
+          className="text-center space-y-2 mb-8 relative z-10"
+        >
           <div className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium border border-blue-500/20 mb-2">
-            2025年まとめ
+            SkyWrap '25
           </div>
           <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight break-all px-4">
             {handle || "あなた"}
           </h1>
-          <p className="text-blue-200/60 text-xs sm:text-sm">Blueskyでの一年</p>
+          <p className="text-blue-200/70 text-xs sm:text-sm">
+            Bluesky Life in 2025
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-2 gap-3 relative z-10">
           <motion.div variants={item}>
-            <StatCard 
+            <StatCard
               icon={<MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />}
-              label="投稿数"
+              label="📝 投稿数"
               value={stats.posts}
-              sub="Thoughts"
+              sub="Posts"
               delay={0}
               compact
             />
           </motion.div>
           <motion.div variants={item}>
-            <StatCard 
+            <StatCard
               icon={<MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />}
-              label="リプライ"
+              label="↩️ リプライ"
               value={stats.replies}
               sub="Replies"
               delay={0.1}
@@ -436,11 +450,11 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
             />
           </motion.div>
           <motion.div variants={item} className="col-span-2">
-            <StatCard 
-              icon={<Heart className="w-4 h-4 sm:w-5 sm:h-5 text-pink-400" />}
-              label="いいね"
+            <StatCard
+              icon={<Heart className="w-4 h-4 sm:h-5 sm:w-5 text-pink-400" />}
+              label="❤️ いいねした数"
               value={stats.likes}
-              sub="あなたが送った「いいね」の数"
+              sub="Likes Sent"
               className="bg-gradient-to-br from-pink-900/20 to-purple-900/20"
               delay={0.2}
             />
@@ -456,7 +470,9 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
                     <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-300" />
                   </div>
                   <div className="text-left min-w-0">
-                    <h3 className="text-blue-200 text-[10px] sm:text-xs font-medium uppercase tracking-wider whitespace-nowrap truncate">最も活発だった月</h3>
+                    <h3 className="text-blue-200 text-[10px] sm:text-xs font-medium uppercase tracking-wider whitespace-nowrap truncate">
+                      📅 一番盛り上がった月
+                    </h3>
                     <p className="text-lg sm:text-xl font-display font-bold text-white truncate">
                       {stats.mostActiveMonth}
                     </p>
@@ -468,19 +484,19 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
         )}
         
         <div className="mt-8 pt-4 border-t border-white/5 flex justify-between items-center text-xs text-white/30 relative z-10">
-           <span>bluesky-year-in-review</span>
-           <span className="font-mono">{new Date().getFullYear()}</span>
+          <span>bsky-summary2025.shino3.net</span>
+          <span className="font-mono">{new Date().getFullYear()}</span>
         </div>
       </div>
 
       <motion.div variants={item} className="text-center pt-4 space-y-6">
         <div className="flex flex-col gap-3 px-4">
-          <Button 
+          <Button
             onClick={handleShare}
             className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium shadow-lg shadow-blue-500/20 text-sm sm:text-base"
           >
             <Share2 className="mr-2 h-4 w-4" />
-            Blueskyでシェア
+            Blueskyに投稿
           </Button>
 
           <div className="grid grid-cols-2 gap-3">
@@ -527,18 +543,18 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    保存＆投稿中...
+                    Blueskyに投稿中...
                   </>
                 ) : savedOnce ? (
-                  "保存＆投稿済み"
+                  "Blueskyに投稿済み"
                 ) : (
-                  "結果を保存してBlueskyに投稿"
+                  "このまとめをBlueskyに投稿"
                 )}
               </Button>
               <p className="mt-1 text-[11px] text-blue-200/60 text-left">
-                bsky-summary2025.shino3.net が、あなたの PDS に
+                bsky-summary2025.shino3.net が、あなたのPDSに
                 <span className="font-mono"> net.shino3.yearsummary2025.wrap/2025 </span>
-                として保存し、同じ内容を Bluesky に投稿します。
+                としてまとめを保存し、同じ内容をBlueskyへ投稿します。
               </p>
             </div>
           )}
@@ -546,17 +562,17 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
           {/* CTA: この結果を見た人自身にも一年のまとめを作ってもらう導線 */}
           <div className="mt-4 p-4 rounded-2xl border border-white/10 bg-white/5 text-left space-y-2">
             <p className="text-sm text-blue-50 font-medium">
-              あなたも自分の一年のまとめを作りませんか？
+              次は、あなたの番です。
             </p>
             <p className="text-xs text-blue-100/70">
-              トップページからログインすると、あなたのBlueskyでの2025年の活動を自動で集計してまとめを作成できます。
+              ログインするだけで、あなただけの2025年まとめカードがすぐに作れます。
             </p>
             <Button
               onClick={() => (window.location.href = "/")}
               variant="secondary"
               className="mt-2 w-full h-10 bg-white text-slate-900 hover:bg-slate-100 text-xs sm:text-sm font-medium rounded-full"
             >
-              一年のまとめを作ろう
+              私も2025年まとめを作る
             </Button>
           </div>
         </div>

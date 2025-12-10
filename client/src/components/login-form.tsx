@@ -11,8 +11,8 @@ import { Loader2, Lock, AtSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
-  identifier: z.string().min(1, "Handle or Email is required"),
-  password: z.string().min(1, "App Password is required"),
+  identifier: z.string().min(1, "ハンドルネームまたはメールアドレスを入力してください"),
+  password: z.string().min(1, "アプリパスワードを入力してください"),
   service: z.string().default("https://bsky.social"),
 });
 
@@ -49,8 +49,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     } catch (error) {
       console.error(error);
       toast({
-        title: "ログイン失敗",
-        description: "認証情報をご確認ください。通常のパスワードではなく、アプリパスワードを使用してください。",
+        title: "ログインできませんでした",
+        description: "アプリパスワードが正しいかご確認ください（通常のパスワードは使用できません）。",
         variant: "destructive",
       });
     } finally {
@@ -62,10 +62,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     <Card className="w-full max-w-md mx-auto glass-card border-white/10 text-white">
       <CardHeader className="space-y-1">
         <CardTitle className="text-xl sm:text-2xl font-bold text-center font-display tracking-tight text-balance">
-          Blueskyでの1年を振り返ろう
+          2025年の足あとを振り返ろう
         </CardTitle>
-        <CardDescription className="text-center text-blue-200/60 break-keep leading-relaxed text-sm sm:text-base">
-          ハンドルネームとアプリパスワードを入力して、<br className="hidden sm:block"/>2025年の活動を確認しましょう。
+        <CardDescription className="text-center text-blue-200/70 break-keep leading-relaxed text-sm sm:text-base">
+          ハンドルネームとアプリパスワードを入力するだけで、<br className="hidden sm:block" />
+          あなたの1年を可視化したグラフを作成します。
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -81,7 +82,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                     <div className="relative">
                       <AtSign className="absolute left-3 top-2.5 h-5 w-5 text-blue-300/50" />
                       <Input 
-                        placeholder="alice.bsky.social" 
+                        placeholder="例: alice.bsky.social" 
                         {...field} 
                         className="pl-10 bg-black/20 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-500"
                       />
@@ -102,14 +103,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-blue-300/50" />
                       <Input 
                         type="password" 
-                        placeholder="xxxx-xxxx-xxxx-xxxx" 
+                        placeholder="例: xxxx-xxxx-xxxx-xxxx" 
                         {...field} 
                         className="pl-10 bg-black/20 border-white/10 text-white placeholder:text-white/20 focus-visible:ring-blue-500"
                       />
                     </div>
                   </FormControl>
-                  <div className="text-xs text-blue-200/50 mt-1">
-                    設定 &gt; プライバシーとセキュリティ &gt; アプリパスワード
+                  <div className="text-xs text-blue-200/60 mt-1">
+                    ⚠️ 必ず「アプリパスワード」を使用してください。
+                    <br className="hidden sm:block" />
+                    普段のログイン用パスワードは絶対に入力しないでください。
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -123,17 +126,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  認証中...
+                  集計しています…
                 </>
               ) : (
-                "2025年の活動を見る"
+                "2025年のまとめを作る"
               )}
             </Button>
-            <p className="mt-3 text-[11px] leading-relaxed text-blue-200/50 text-left">
-              解析結果の画面からボタンを押すと、あなたの PDS に
-              <span className="font-mono"> net.shino3.yearsummary2025.wrap/2025 </span>
-              として今年一年のサマリーを保存し、結果を Bluesky に 1 件投稿できます。
-              投稿内容には <span className="font-mono">bsky-summary2025.shino3.net</span> へのリンクが含まれます。
+            <p className="mt-3 text-[11px] leading-relaxed text-blue-200/60 text-left">
+              作成されたまとめは、1タップでBlueskyにシェアできます。
+              <br className="hidden sm:block" />
+              ログイン情報は保存されませんのでご安心ください。
             </p>
           </form>
         </Form>
