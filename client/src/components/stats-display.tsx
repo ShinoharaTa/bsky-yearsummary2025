@@ -301,7 +301,7 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
 
   if (stats.loading) {
     return (
-      <div className="max-w-md mx-auto text-center space-y-6 pt-12">
+      <div className="w-full max-w-md mx-auto text-center space-y-6 py-8">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -310,7 +310,7 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
           <h2 className="text-2xl font-display text-white">
             2025年の足あとを集計中…
           </h2>
-          <p className="text-blue-200/70">
+          <p className="text-blue-200/70 text-sm sm:text-base">
             PDSから2025年の投稿・リプライ・いいねを読み込んでいます。少しお待ちください。
           </p>
         </motion.div>
@@ -345,8 +345,8 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
       };
 
       return (
-        <div className="max-w-md mx-auto space-y-6 pt-12 text-center">
-          <div className="glass-card p-8 rounded-xl border border-white/10 bg-black/40 text-white space-y-4">
+        <div className="w-full max-w-md mx-auto py-8 text-center">
+          <div className="glass-card p-6 sm:p-8 rounded-2xl border border-white/10 bg-black/40 text-white space-y-4">
             <h2 className="text-xl font-display font-bold">
               {atHandle} さんのまとめはまだありません
             </h2>
@@ -355,7 +355,7 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
               <br />
               アカウントの持ち主に「今年のまとめを作ってほしい」とお願いしてみましょう。
             </p>
-            <div className="flex flex-col gap-3 mt-4">
+            <div className="flex flex-col gap-3 pt-2">
               <Button
                 onClick={handleRequest}
                 className="w-full h-11 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium"
@@ -377,10 +377,12 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
 
     // 自分自身の画面など、handle が無い場合は従来どおりのエラーメッセージ
     return (
-      <div className="text-center text-red-400 glass-card p-8 rounded-xl">
-        <p>
-          データの取得に失敗しました。タイムラインが大きいか、一時的なエラーの可能性があります。時間をおいて再度お試しください。
-        </p>
+      <div className="w-full max-w-md mx-auto py-8">
+        <div className="text-center text-red-400 glass-card p-6 sm:p-8 rounded-2xl">
+          <p className="text-sm sm:text-base">
+            データの取得に失敗しました。タイムラインが大きいか、一時的なエラーの可能性があります。時間をおいて再度お試しください。
+          </p>
+        </div>
       </div>
     );
   }
@@ -405,22 +407,22 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="max-w-xl mx-auto space-y-8 pb-12"
+      className="w-full max-w-lg mx-auto space-y-6 pb-8"
     >
       {/* Capture Area */}
-      <div ref={cardRef} className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+      <div ref={cardRef} className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
         {/* Decorative background for the image */}
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-blue-500/20 rounded-full blur-[80px]" />
         <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-purple-500/20 rounded-full blur-[80px]" />
 
         <motion.div
           variants={item}
-          className="text-center space-y-2 mb-8 relative z-10"
+          className="text-center space-y-2 mb-6 relative z-10"
         >
           <div className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium border border-blue-500/20 mb-2">
             SkyWrap '25
           </div>
-          <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight break-all px-4">
+          <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight break-all">
             {handle || "あなた"}
           </h1>
           <p className="text-blue-200/70 text-xs sm:text-sm">
@@ -462,119 +464,117 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
         </div>
 
         {stats.mostActiveMonth && (
-          <motion.div variants={item} className="pt-3 relative z-10">
+          <motion.div variants={item} className="pt-4 relative z-10">
             <Card className="bg-black/20 border-white/5 overflow-hidden relative group">
-              <CardContent className="p-3 sm:p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
-                  <div className="p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
-                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-300" />
-                  </div>
-                  <div className="text-left min-w-0">
-                    <h3 className="text-blue-200 text-[10px] sm:text-xs font-medium uppercase tracking-wider whitespace-nowrap truncate">
-                      📅 一番盛り上がった月
-                    </h3>
-                    <p className="text-lg sm:text-xl font-display font-bold text-white truncate">
-                      {stats.mostActiveMonth}
-                    </p>
-                  </div>
+              <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+                <div className="p-2 rounded-lg bg-blue-500/10 flex-shrink-0">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-300" />
+                </div>
+                <div className="text-left min-w-0">
+                  <h3 className="text-blue-200 text-[10px] sm:text-xs font-medium uppercase tracking-wider whitespace-nowrap truncate">
+                    📅 一番盛り上がった月
+                  </h3>
+                  <p className="text-lg sm:text-xl font-display font-bold text-white truncate">
+                    {stats.mostActiveMonth}
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
         )}
         
-        <div className="mt-8 pt-4 border-t border-white/5 flex justify-between items-center text-xs text-white/30 relative z-10">
+        <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-xs text-white/30 relative z-10">
           <span>bsky-summary2025.shino3.net</span>
           <span className="font-mono">{new Date().getFullYear()}</span>
         </div>
       </div>
 
-      <motion.div variants={item} className="text-center pt-4 space-y-6">
-        <div className="flex flex-col gap-3 px-4">
-          <Button
-            onClick={handleShare}
-            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium shadow-lg shadow-blue-500/20 text-sm sm:text-base"
+      <motion.div variants={item} className="space-y-4">
+        <Button
+          onClick={handleShare}
+          className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium shadow-lg shadow-blue-500/20 text-sm sm:text-base"
+        >
+          <Share2 className="mr-2 h-4 w-4" />
+          Blueskyに投稿
+        </Button>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Button 
+            onClick={handleDownload}
+            variant="secondary"
+            className="w-full h-11 bg-white/10 hover:bg-white/20 text-white border-0 rounded-full text-xs sm:text-sm"
+            disabled={downloading}
           >
-            <Share2 className="mr-2 h-4 w-4" />
-            Blueskyに投稿
+            {downloading ? (
+              <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+            )}
+            画像を保存
           </Button>
+          
+          <Button 
+            onClick={handleCopy}
+            variant="ghost"
+            className="w-full h-11 text-blue-200 hover:text-white hover:bg-white/5 rounded-full text-xs sm:text-sm"
+          >
+            {copied ? (
+              <>
+                <Check className="mr-2 h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
+                コピー完了
+              </>
+            ) : (
+              <>
+                <Copy className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                リンクをコピー
+              </>
+            )}
+          </Button>
+        </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              onClick={handleDownload}
-              variant="secondary"
-              className="w-full h-11 bg-white/10 hover:bg-white/20 text-white border-0 rounded-full text-xs sm:text-sm"
-              disabled={downloading}
+        {canSave && (
+          <div className="space-y-2">
+            <Button
+              onClick={handleSaveAndPost}
+              disabled={saving || savedOnce}
+              className="w-full h-11 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full text-sm"
             >
-              {downloading ? (
-                <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-              ) : (
-                <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              )}
-              画像を保存
-            </Button>
-            
-            <Button 
-              onClick={handleCopy}
-              variant="ghost"
-              className="w-full h-11 text-blue-200 hover:text-white hover:bg-white/5 rounded-full text-xs sm:text-sm"
-            >
-              {copied ? (
+              {saving ? (
                 <>
-                  <Check className="mr-2 h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
-                  コピー完了
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Blueskyに投稿中...
                 </>
+              ) : savedOnce ? (
+                "Blueskyに投稿済み"
               ) : (
-                <>
-                  <Copy className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  リンクをコピー
-                </>
+                "このまとめをBlueskyに投稿"
               )}
             </Button>
+            <p className="text-[11px] text-blue-200/60 text-left">
+              bsky-summary2025.shino3.net が、あなたのPDSに
+              <span className="font-mono"> net.shino3.yearsummary2025.wrap/2025 </span>
+              としてまとめを保存し、同じ内容をBlueskyへ投稿します。
+            </p>
           </div>
+        )}
 
-          {canSave && (
-            <div className="mt-2">
-              <Button
-                onClick={handleSaveAndPost}
-                disabled={saving || savedOnce}
-                className="w-full h-11 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full text-sm"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Blueskyに投稿中...
-                  </>
-                ) : savedOnce ? (
-                  "Blueskyに投稿済み"
-                ) : (
-                  "このまとめをBlueskyに投稿"
-                )}
-              </Button>
-              <p className="mt-1 text-[11px] text-blue-200/60 text-left">
-                bsky-summary2025.shino3.net が、あなたのPDSに
-                <span className="font-mono"> net.shino3.yearsummary2025.wrap/2025 </span>
-                としてまとめを保存し、同じ内容をBlueskyへ投稿します。
-              </p>
-            </div>
-          )}
-
-          {/* CTA: この結果を見た人自身にも一年のまとめを作ってもらう導線 */}
-          <div className="mt-4 p-4 rounded-2xl border border-white/10 bg-white/5 text-left space-y-2">
+        {/* CTA: この結果を見た人自身にも一年のまとめを作ってもらう導線 */}
+        <div className="p-4 rounded-2xl border border-white/10 bg-white/5 text-left space-y-3">
+          <div className="space-y-1">
             <p className="text-sm text-blue-50 font-medium">
               次は、あなたの番です。
             </p>
             <p className="text-xs text-blue-100/70">
               ログインするだけで、あなただけの2025年まとめカードがすぐに作れます。
             </p>
-            <Button
-              onClick={() => (window.location.href = "/")}
-              variant="secondary"
-              className="mt-2 w-full h-10 bg-white text-slate-900 hover:bg-slate-100 text-xs sm:text-sm font-medium rounded-full"
-            >
-              私も2025年まとめを作る
-            </Button>
           </div>
+          <Button
+            onClick={() => (window.location.href = "/")}
+            variant="secondary"
+            className="w-full h-10 bg-white text-slate-900 hover:bg-slate-100 text-xs sm:text-sm font-medium rounded-full"
+          >
+            私も2025年まとめを作る
+          </Button>
         </div>
       </motion.div>
 

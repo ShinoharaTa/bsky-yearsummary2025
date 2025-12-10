@@ -60,7 +60,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   return (
     <Card className="w-full max-w-md mx-auto glass-card border-white/10 text-white">
-      <CardHeader className="space-y-1">
+      <CardHeader className="space-y-2 px-4 sm:px-6 pt-6 pb-4">
         <CardTitle className="text-xl sm:text-2xl font-bold text-center font-display tracking-tight text-balance">
           2025年の足あとを振り返ろう
         </CardTitle>
@@ -69,7 +69,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           あなたの1年を可視化したグラフを作成します。
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6 pb-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -109,7 +109,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                       />
                     </div>
                   </FormControl>
-                  <div className="text-xs text-blue-200/60 mt-1">
+                  <div className="text-xs text-blue-200/60 mt-2">
                     ⚠️ 必ず「アプリパスワード」を使用してください。
                     <br className="hidden sm:block" />
                     普段のログイン用パスワードは絶対に入力しないでください。
@@ -118,21 +118,23 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-0 font-medium h-11"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  集計しています…
-                </>
-              ) : (
-                "2025年のまとめを作る"
-              )}
-            </Button>
-            <p className="mt-3 text-[11px] leading-relaxed text-blue-200/60 text-left">
+            <div className="pt-2">
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-0 font-medium h-11"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    集計しています…
+                  </>
+                ) : (
+                  "2025年のまとめを作る"
+                )}
+              </Button>
+            </div>
+            <p className="text-[11px] leading-relaxed text-blue-200/60 text-left">
               作成されたまとめは、1タップでBlueskyにシェアできます。
               <br className="hidden sm:block" />
               ログイン情報は保存されませんのでご安心ください。
