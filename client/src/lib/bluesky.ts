@@ -37,6 +37,10 @@ export async function fetchYearlyStats(
   // We'll track month counts to find most active month
   const monthCounts: Record<number, number> = {};
 
+  // listRecords で取得したレコード件数の累積。
+  // ローディング画面のプログレス表示用に使う。
+  let totalFetchedRecords = 0;
+
   // Helper to fetch all records of a collection (kept for future use)
   const fetchCollection = async (
     collection: string,
@@ -67,8 +71,9 @@ export async function fetchYearlyStats(
       cursor = res.data.cursor;
       if (!cursor) keepGoing = false;
 
-      // Fake progress for UI feedback
-      onProgress(Math.random() * 10); // Incrementally add progress
+      // 現状このヘルパーは使っていないが、
+      // 将来的に利用する場合はここでも totalFetchedRecords を更新して
+      // onProgress(totalFetchedRecords) を呼び出す想定。
     }
   };
 
@@ -86,6 +91,9 @@ export async function fetchYearlyStats(
     });
 
     if (res.data.records.length === 0) break;
+
+    // listRecords で取得した件数（最大 100 件）を累積
+    totalFetchedRecords += res.data.records.length;
 
     for (const { value } of res.data.records) {
       const record = value as any;
@@ -117,7 +125,9 @@ export async function fetchYearlyStats(
 
     cursor = res.data.cursor;
     if (!cursor) break;
-    onProgress(5); // Arbitrary progress tick
+
+    // ここまでに取得した listRecords 件数の累積を進捗コールバックへ渡す
+    onProgress(totalFetchedRecords);
   }
 
   // Reset for Likes
@@ -134,6 +144,9 @@ export async function fetchYearlyStats(
     });
 
     if (res.data.records.length === 0) break;
+
+    // Like コレクション側も同様に取得件数を累積
+    totalFetchedRecords += res.data.records.length;
 
     for (const { value } of res.data.records) {
       const record = value as any;
@@ -154,7 +167,8 @@ export async function fetchYearlyStats(
 
     cursor = res.data.cursor;
     if (!cursor) break;
-    onProgress(5);
+
+    onProgress(totalFetchedRecords);
   }
 
   // Calculate most active month

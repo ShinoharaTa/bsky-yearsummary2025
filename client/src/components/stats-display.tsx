@@ -8,7 +8,6 @@ import {
   agent,
 } from "@/lib/bluesky";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   MessageSquare,
   Heart,
@@ -89,11 +88,13 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
           }
         } else {
           // 自分自身のアカウントに対する重い解析（listRecords）モード
-          const data = await fetchYearlyStats(did, 2025, (p) => {
+          // onProgress には、listRecords でこれまでに取得したレコード件数の累積が渡される
+          const data = await fetchYearlyStats(did, 2025, (fetchedCount) => {
             if (mounted) {
               setStats((prev) => ({
                 ...prev,
-                progress: Math.min(prev.progress + p, 90),
+                // プログレスバーでは「何件取得したか」をそのまま表示する
+                progress: fetchedCount,
               }));
             }
           });
@@ -267,10 +268,16 @@ export function StatsDisplay({ did, handle }: StatsDisplayProps) {
           </p>
         </motion.div>
 
-        <div className="space-y-2">
-          <Progress value={stats.progress} className="h-2 bg-white/10" />
-          <div className="text-xs text-blue-300/40 text-right font-mono">
-            {Math.floor(stats.progress)}%
+        <div className="space-y-4 flex flex-col items-center justify-center">
+          <div className="flex items-center justify-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full border border-blue-500/30 bg-blue-500/10">
+              <Loader2 className="w-7 h-7 text-blue-300 animate-spin" />
+            </div>
+          </div>
+          <div className="text-xs text-blue-300/60 font-mono">
+            {stats.progress > 0
+              ? `${stats.progress.toLocaleString()} 件のレコードを取得中…`
+              : "PDSからデータを取得しています…"}
           </div>
         </div>
       </div>
